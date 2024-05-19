@@ -47,23 +47,21 @@ rule identify_virsorter2_config:
     shell:
         '''
 
-        configfile=`python -c 'import os,virsorter;print(os.path.join(virsorter.__path__[0], "template-config.yaml"))'`
-	source activate vs2
+        configfile=`/opt/conda/envs/vs2/bin/python -c 'import os,virsorter;print(os.path.join(virsorter.__path__[0], "template-config.yaml"))'`
 
         if [ -f $configfile ];
         then
             cp $configfile {output}
         else
-            virsorter config --init-source --db-dir={params.db_dir} >{log} 2>&1
+            /opt/conda/envs/vs2/bin/virsorter config --init-source --db-dir={params.db_dir} >{log} 2>&1
 
-            virsorter config --set GENERAL_THREADS={threads} >>{log} 2>&1
-            virsorter config --set HMMSEARCH_THREADS=2 >>{log} 2>&1
-            virsorter config --set CLASSIFY_THREADS={threads} >>{log} 2>&1
+            /opt/conda/envs/vs2/bin/virsorter config --set GENERAL_THREADS={threads} >>{log} 2>&1
+            /opt/conda/envs/vs2/bin/virsorter config --set HMMSEARCH_THREADS=2 >>{log} 2>&1
+            /opt/conda/envs/vs2/bin/virsorter config --set CLASSIFY_THREADS={threads} >>{log} 2>&1
 
             cp $configfile {output}
         fi
 	
-	deactivate vs2
         '''
 
 
