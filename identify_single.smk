@@ -364,7 +364,7 @@ rule identify_deepvirfinder:
 	input1=os.path.join(config["output"]["assembly"],"scaftigs/{binning_group}.{assembly_group}.{assembler}/{binning_group}.{assembly_group}.{assembler}.scaftigs.fa")
 
         /opt/conda/envs/meta5_env/bin/python {params.deepvirfinder} \
-        --in {input} \
+        --in $input1 \
         --out {params.out_dir} \
         --len {params.min_length} \
         --core {threads} \
