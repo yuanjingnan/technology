@@ -47,7 +47,7 @@ rule identify_virsorter2_config:
     shell:
         '''
 
-        configfile=`/opt/conda/envs/vs2/bin/python -c 'import os,virsorter;print(os.path.join(virsorter.__path__[0], "template-config.yaml"))'`
+        configfile=`/opt/conda/envs/vs2/bin/python -c 'import os,virsorter;print(os.path.join(virsorter.__path__[0], "template-config-original.yaml"))'`
 
         if [ -f $configfile ];
         then
