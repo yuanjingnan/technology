@@ -360,6 +360,8 @@ rule identify_deepvirfinder:
         rm -rf {params.out_dir}
 
         set +e
+	gzip -dk {input}
+	input1=os.path.join(config["output"]["assembly"],"scaftigs/{binning_group}.{assembly_group}.{assembler}/{binning_group}.{assembly_group}.{assembler}.scaftigs.fa")
 
         /opt/conda/envs/meta5_env/bin/python {params.deepvirfinder} \
         --in {input} \
