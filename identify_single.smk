@@ -179,6 +179,7 @@ rule identify_virsorter2:
     params:
         label = "{binning_group}.{assembly_group}.{assembler}",
         include_groups = ",".join(config["params"]["identify"]["virsorter2"]["include_groups"]),
+	db_dir = config["params"]["identify"]["virsorter2"]["db"],
         working_dir = os.path.join(config["output"]["identify"], "vmags/{binning_group}.{assembly_group}.{assembler}/virsorter2/virsorter2_{split_num}"),
         min_length = config["params"]["identify"]["virsorter2"]["min_length"],
         min_score = config["params"]["identify"]["virsorter2"]["min_score"],
@@ -203,6 +204,7 @@ rule identify_virsorter2:
         {params.provirus_off} \
         {params.rm_tmpdir} \
         {params.keep_original_seq} \
+	--db-dir {params.db_dir} \
         --working-dir {params.working_dir} \
         --seqfile {input.scaftigs} \
         --label {params.label} \
