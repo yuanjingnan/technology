@@ -49,7 +49,7 @@ rule identify_virsorter2_config:
 
         configfile=`/opt/conda/envs/vs2/bin/python -c 'import os,virsorter;print(os.path.join(virsorter.__path__[0], "template-config-original.yaml"))'`
 
-        if [ -f $configfile ];
+        if [ -f $configfile == "/opt/conda/envs/vs2/lib/python3.10/site-packages/virsorter/template-config.yaml" ];
         then
             cp $configfile {output}
         else
@@ -106,6 +106,7 @@ rule identify_virsorter2_init_run:
     input:
         config_file = os.path.join(config["output"]["identify"], "config/virsorter2-template-config.yaml"),
         lambda_virus = os.path.join(DATA_DIR, "lambda_virus.fa")
+
     output:
         init_success = os.path.join(config["output"]["identify"], "config/virsorter2-init-run-success")
     log:
