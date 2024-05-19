@@ -350,7 +350,7 @@ rule identify_deepvirfinder:
         deepvirfinder = config["params"]["identify"]["deepvirfinder"]["script"],
         out_dir = os.path.join(config["output"]["identify"], "vmags/{binning_group}.{assembly_group}.{assembler}/deepvirfinder"),
         min_length=config["params"]["identify"]["deepvirfinder"]["min_length"],
-	input1 = os.path.join(config["output"]["assembly"],"scaftigs/{binning_group}.{assembly_group}.{assembler}/{binning_group}.{assembly_group}.{assembler}.v1.scaftigs.fa.gz")
+	input1 = os.path.join(config["output"]["assembly"],"scaftigs/{binning_group}.{assembly_group}.{assembler}/{binning_group}.{assembly_group}.{assembler}.v1.scaftigs.fa.gz"),
 	input2 = os.path.join(config["output"]["assembly"],"scaftigs/{binning_group}.{assembly_group}.{assembler}/{binning_group}.{assembly_group}.{assembler}.scaftigs.fa")
     threads:
         config["params"]["identify"]["threads"]
