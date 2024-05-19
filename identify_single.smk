@@ -349,7 +349,8 @@ rule identify_deepvirfinder:
     params:
         deepvirfinder = config["params"]["identify"]["deepvirfinder"]["script"],
         out_dir = os.path.join(config["output"]["identify"], "vmags/{binning_group}.{assembly_group}.{assembler}/deepvirfinder"),
-        min_length=config["params"]["identify"]["deepvirfinder"]["min_length"]
+        min_length=config["params"]["identify"]["deepvirfinder"]["min_length"],
+	input1 = os.path.join(config["output"]["assembly"],"scaftigs/{binning_group}.{assembly_group}.{assembler}/{binning_group}.{assembly_group}.{assembler}.scaftigs.fa")
     threads:
         config["params"]["identify"]["threads"]
     conda:
@@ -361,10 +362,8 @@ rule identify_deepvirfinder:
 
         set +e
 	gzip -dk {input}
-	input1=os.path.join(config["output"]["assembly"],"scaftigs/{binning_group}.{assembly_group}.{assembler}/{binning_group}.{assembly_group}.{assembler}.scaftigs.fa")
-
         /opt/conda/envs/meta5_env/bin/python {params.deepvirfinder} \
-        --in $input1 \
+        --in {params.input1} \
         --out {params.out_dir} \
         --len {params.min_length} \
         --core {threads} \
