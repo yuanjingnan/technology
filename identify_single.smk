@@ -356,13 +356,12 @@ rule identify_deepvirfinder:
         config["envs"]["deepvirfinder"]
     shell:
         '''
-	source activate meta5_env
 
         rm -rf {params.out_dir}
 
         set +e
 
-        python {params.deepvirfinder} \
+        /opt/conda/envs/meta5_env/bin/python {params.deepvirfinder} \
         --in {input} \
         --out {params.out_dir} \
         --len {params.min_length} \
@@ -393,7 +392,6 @@ rule identify_deepvirfinder:
                 exit $exitcode
             fi
         fi
-	deactivate meta5_env
         '''
 
 
