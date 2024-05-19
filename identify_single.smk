@@ -46,9 +46,9 @@ rule identify_virsorter2_config:
         config["envs"]["virsorter2"]
     shell:
         '''
-	source activate vs2
 
         configfile=`python -c 'import os,virsorter;print(os.path.join(virsorter.__path__[0], "template-config.yaml"))'`
+	source activate vs2
 
         if [ -f $configfile ];
         then
