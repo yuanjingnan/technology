@@ -356,6 +356,8 @@ rule identify_deepvirfinder:
         config["envs"]["deepvirfinder"]
     shell:
         '''
+	source activate meta5_env
+
         rm -rf {params.out_dir}
 
         set +e
@@ -391,6 +393,7 @@ rule identify_deepvirfinder:
                 exit $exitcode
             fi
         fi
+	deactivate meta5_env
         '''
 
 
