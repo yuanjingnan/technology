@@ -1,0 +1,98 @@
+#!/usr/bin/perl
+
+=pod
+description: summarize all samples' gene expression
+author: Du Shuai, dushuai@genomics.cn
+        Zhang Fangxian, zhangfx@genomics.cn
+created date: 20110127
+modified date: 20110215
+modified for GeneAndIsoformExp_RSEM:2014-08-28
+=cut
+
+use strict;
+use warnings;
+use File::Basename qw(dirname basename);
+
+my $usage = << "USAGE";
+description: summarize all samples' gene and isoform expression
+usage: perl $0 indir output
+USAGE
+
+my ($indir, $output) = @ARGV;
+die $usage if (!defined $indir or !defined $output);
+
+my $header_gene = "gene_id\tgene_symbol\ttranscript_id(s)";
+my (@samples_gene, %result_gene);
+
+#########------- read files for all.gene.FPKM.xls -------#########
+
+for my $file_gene (glob("$indir/*/*.gene.fpkm.xls")) {
+	my $keyname_gene = basename($file_gene);
+	$keyname_gene =~ s/\.gene\.fpkm\.xls$//;
+	push @samples_gene, $keyname_gene;
+
+	&showLog("read file $file_gene");
+	open GENE, "< $file_gene" or die $!;
+
+	my $temp = <GENE>;
+	chomp $temp;
+	my @tabs = split /\t/, $temp;
+	$header_gene .= "\t$keyname_gene\_FPKM";
+
+	while (<GENE>) {
+		chomp;
+		@tabs = split /\t/, $_;
+		@{$result_gene{"$tabs[0]\t$tabs[1]"}{$keyname_gene}} = $tabs[4];
+                
+	}
+	close GENE;
+}
+
+for my $gene_gene (keys %result_gene){
+        if (!exists $result_gene{$gene_gene}{$samples_gene[0]}) {
+                $result_gene{$gene_gene}{$samples_gene[0]}->[0] = 0;
+        }
+}
+##########------- output all.gene.FPKM.xls --------#########
+
+open OUT, "> $output" or die $!;
+print OUT "$header_gene\n";
+for my $gene_gene (sort {$result_gene{$b}{$samples_gene[0]}->[0] <=> $result_gene{$a}{$samples_gene[0]}->[0]} keys %result_gene) {
+	my @temp_gene =split(/\t/,$gene_gene);
+	my @new_trans;
+	my @trans = split(/,/,$temp_gene[1]);
+	foreach my $tran (@trans){
+		$tran =~ (/(N._\d+|id\d+)/);
+		push @new_trans, $1;
+	}
+	my $new_tran = join(",",@new_trans);
+	# print $new_tran;
+	my @temp_gene_symbol = split(/_/,$temp_gene[0]);
+	my $geneid=$temp_gene_symbol[0];
+	# $geneid =substr($geneid,4);
+	my $new_gene_gene="$geneid\t$temp_gene_symbol[1]\t$new_tran";
+        print OUT $new_gene_gene;
+        for (@samples_gene) {
+                if (exists $result_gene{$gene_gene}{$_} && @{$result_gene{$gene_gene}{$_}} == 1) {
+
+                          print OUT join("\t", "",@{$result_gene{$gene_gene}{$_}});
+
+                } else {
+
+                          print OUT "\t0" ;
+                      }
+                }
+
+       print OUT "\n";
+}
+close OUT;
+&showLog("done");
+exit 0;
+
+#######------ sub ------#######
+
+sub showLog {
+	my ($info) = @_;
+	my @times = localtime; # sec, min, hour, day, month, year
+	print STDERR sprintf("[%d-%02d-%02d %02d:%02d:%02d] %s\n", $times[5] + 1900, $times[4] + 1, $times[3], $times[2], $times[1], $times[0], $info);
+}

@@ -1,0 +1,113 @@
+#!/usr/bin/perl
+#Author: liuchichuan@genomics.cn
+#Date:  20161228
+
+
+use strict;
+use warnings;
+use Getopt::Long;
+use FindBin '$Bin';
+use Cwd 'abs_path';
+use File::Basename;
+
+my ($genelist, $outdir);
+GetOptions(
+	"genelist:s" => \$genelist,
+	"outdir:s" => \$outdir
+);
+
+if (!$genelist || !$outdir) 
+{
+	die "usage: perl $0 -genelist AllSamples.GeneExpression.FPKM.xls -outdir output_directory\n";
+}
+
+
+my ($samplenum, %known, %novel, %total, %per);
+open IN,$genelist or die $!;
+chomp (my $head = <IN>);
+my @h = split (/\t+/,$head);
+foreach ( @h )
+{
+	$samplenum++ if ($_ =~ /FPKM/);
+}
+while (<IN>) 
+{
+	next if (/^#/ || /^\s*$/);
+	chomp; my @sp = split /\t+/;
+	my $expnum = 0;
+	for (my $i=2;$i<2+$samplenum;$i++)
+	{
+		if ( $sp[$i] != 0 )
+		{
+			$expnum++;
+		}
+	}
+	if ($sp[0] !~ /novel/)
+	{
+		$known{$expnum}++;
+		$total{'known'}++;
+	}
+	else
+	{
+		$novel{$expnum}++;
+		$total{'novel'}++;
+	}
+}
+close IN;
+
+open O,">$outdir/Expressed_gene_percentage.xls" or die $!;
+print O "Sample_Number\tGene_Type\tPercentage\n";
+foreach my $k (1..$samplenum)
+{
+	$known{$k} = 0 if (!defined $known{$k});
+	$novel{$k} = 0 if (!defined $novel{$k});
+	$per{$k}{'known gene'} = sprintf("%.2f", $known{$k}/$total{'known'}*100);
+	$per{$k}{'novel gene'} = sprintf("%.2f", $novel{$k}/$total{'novel'}*100);
+}
+
+foreach my $num (sort { $b <=> $a } keys %per)
+{
+	foreach my $type (sort keys %{$per{$num}})
+	{
+		if ($num == 1)
+		{
+			print O "expressed in $num sample\t$type\t$per{$num}{$type}\n";
+		}
+		else
+		{
+			print O "expressed in $num samples\t$type\t$per{$num}{$type}\n";
+		}
+	}
+}
+close O;
+
+open R,">$outdir/Expressed_gene_percentage.R" or die $!;
+print R <<CODE;
+pdf("$outdir/Expressed_gene_percentage.pdf",width=10,height=10)
+library(ggplot2)
+dat <- read.table("$outdir/Expressed_gene_percentage.xls",sep="\\t",header=TRUE)
+dat\$Sample_Number <- factor(dat\$Sample_Number, levels = rev(unique(dat\$Sample_Number)))
+colours <- colorRampPalette(c("#EDF8B1","#C7E9B4","#7FCDBB","#41B6C4","#1D91C0","#225EA8","#253494","#081D58"))($samplenum)
+ggplot(data=dat, aes(x=Gene_Type, y=Percentage, fill=Sample_Number)) +
+geom_bar(aes(fill=Sample_Number),stat="identity",width=0.6)+
+scale_y_continuous(expand = c(0.01,0))+
+scale_fill_manual(values=colours)+
+guides(fill = guide_legend(title = NULL,keywidth = 1, keyheight = 1))+
+ggtitle("Expressed Gene Percentage")+
+labs(x="")+
+labs(y="Percentage of genes(%)")+
+theme_bw()+
+theme(plot.title = element_text(size=30,face = "bold",hjust = 0.5, vjust=2))+
+theme(axis.title.y = element_text(size = 25))+
+theme(axis.text.y = element_text(colour="grey20",size=20,hjust =1))+
+theme(axis.text.x = element_text(colour="grey20",size=20,angle=30, hjust =1))+
+theme(panel.grid =element_blank()) +
+theme(panel.border = element_rect(colour = "black", size = 0.5)) +
+theme(legend.text=element_text(size=15)) +
+theme(legend.background = element_rect(colour = "black", size = 0.5))
+dev.off()
+CODE
+close R;
+system("$Bin/../software/Rscript $outdir/Expressed_gene_percentage.R");
+system("$Bin/../software/convert -density 300 $outdir/Expressed_gene_percentage.pdf $outdir/Expressed_gene_percentage.png");
+

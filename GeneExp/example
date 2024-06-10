@@ -1,0 +1,100 @@
+#!/usr/bin/perl
+
+#Author: licong@genomics.cn
+#Date: 20161228
+
+
+use strict;
+use warnings;
+use FindBin '$Bin';
+use Getopt::Long;
+
+my ($Indir,$Outdir,$Algorithm,$Rscript,$Convert);
+GetOptions(
+	"indir:s" => \$Indir,
+	"cor:s" => \$Algorithm,
+	"Rpath:s" => \$Rscript,
+	"convert:s" => \$Convert,
+	"outdir:s" => \$Outdir
+);
+if (!defined $Indir) {
+	print STDERR <<USAGE;
+Description: Draw Hclust Tree for Samples
+Usage: perl $0 [options]
+Options:
+	* -indir     input directory, containing *.Gene.rpkm.xls(gene expression level files)
+	  -Rpath     path of Rscript, default: ../software/Rscript
+	  -convert   path of convert, default: ../software/convert
+	  -outdir    output directory, default: current directory
+E.g.:
+	perl $0 -indir result/GeneExp -outdir ./
+
+USAGE
+	exit;
+}
+
+$Rscript ||= "$Bin/../software/Rscript";
+$Convert ||= "$Bin/../software/convert";
+$Outdir ||= "./";
+
+my @files = glob("$Indir/*.gene.fpkm.xls");
+my %exp = ();
+open OUT,">$Outdir/drawstacked_bar.matrix";
+print OUT "Range\tSample\tGeneNumber\n";
+foreach my $f (@files) {
+	my ($sample) = $f =~ /.*\/(.*)\.gene\.fpkm\.xls/;
+	$exp{'FPKM<=1'}{$sample}=0;
+	$exp{'1<FPKM<10'}{$sample}=0;
+	$exp{'FPKM>=10'}{$sample}=0;
+	open my $fh_rpkm,"<",$f or die $!;<$fh_rpkm>;
+	while (<$fh_rpkm>) {
+		chomp;
+		my @a = split /\s+/;
+		if($a[4]<=1){
+			$exp{'FPKM<=1'}{$sample}++ ;
+		}elsif($a[4]>1 && $a[4]<10){
+			$exp{'1<FPKM<10'}{$sample}++;
+		}else{
+			$exp{'FPKM>=10'}{$sample}++;
+		}
+	}
+	close $fh_rpkm;
+#	print OUT "FPKM <=1\t$sample\t$exp{'FPKM<=1'}{$sample}\nFPKM 1~10\t$sample\t$exp{'1<FPKM<10'}{$sample}\nFPKM >=10\t$sample\t$exp{'FPKM>=10'}{$sample}\n";
+	print OUT "FPKM >=10\t$sample\t$exp{'FPKM>=10'}{$sample}\nFPKM 1~10\t$sample\t$exp{'1<FPKM<10'}{$sample}\nFPKM <=1\t$sample\t$exp{'FPKM<=1'}{$sample}\n";
+}
+#######################generate R script#####################
+open RSC,"> $Outdir/stacked_bar.R" or die $!;
+print RSC <<EOF;
+pdf("$Outdir/Expression_distribution.pdf",width=10,height=10)
+library(ggplot2)
+library(plyr)
+dat <- read.table("$Outdir/drawstacked_bar.matrix",sep="\\t",header=TRUE)
+dat\$Range <- factor(dat\$Range, levels =c("FPKM <=1","FPKM 1~10","FPKM >=10"))
+dat <- ddply(dat, .(Sample),transform, pos = cumsum(GeneNumber) - (0.5 * GeneNumber))
+len <- length(unique(dat\$Sample))
+ggplot(data=dat, aes(x=Sample, y=GeneNumber,fill=Range)) +
+geom_bar(aes(fill=Range),stat="identity")+
+geom_text(aes(label = GeneNumber, y = pos), size = 36/len)+
+scale_y_continuous(expand = c(0.01,0))+
+#scale_fill_manual(values=c("lightblue","lightblue3","lightblue4"))+
+#scale_fill_manual(values=c("#EDF8B1","#7FCDBB","#1D91C0"))+
+scale_fill_manual(values=c("#4EB3D3","#2B8CBE","#0868AC"))+
+ggtitle("Gene expression in each sample")+
+labs(x="")+
+theme_bw()+
+guides(fill = guide_legend(title = NULL,keywidth = 2, keyheight = 2))+
+theme(plot.title = element_text(size=20,face = "bold",hjust = 0.5, vjust=2.12))+
+theme(axis.title.y = element_text(face="bold",size = 18))+
+theme(axis.text.y = element_text(size=16,hjust =1))+
+#theme(axis.text.x = element_text(face="bold",size=96/len,angle=30, hjust =1),panel.grid.major=element_line(colour=NA),panel.grid =element_blank())+
+theme(axis.text.x = element_text(size=96/len,angle=30, hjust =1),panel.grid =element_blank())+
+theme(legend.title=element_text())+
+theme(legend.text=element_text(size=15))
+dev.off()
+EOF
+close RSC;
+
+system("$Rscript $Outdir/stacked_bar.R && rm $Outdir/drawstacked_bar.matrix && rm $Outdir/stacked_bar.R");
+system("$Convert -density 300 -resize 40% $Outdir/Expression_distribution.pdf $Outdir/Expression_distribution.png");
+
+exit;
