@@ -42,7 +42,7 @@ Released:
 Author:
 	yumingqi\@bgitechsolutions.com
 USAGE
-$convert ||= "$Bin/../Bin_CentOS6/convert";
+$convert ||= "/usr/bin/convert";
 $Rscript ||= "unset R_LIBS_USER && unset R_LIBS && \\\n unset R_LIBS_SITE && \\\n export R_LIBS_USER=\"/usr/local/envs/r_3_5_1/lib/R/library\" && /usr/local/bin/Rscript";
 $samtools ||= "/usr/local/RSEM-1.3.1/RSEM/1.3.1/bin/samtools-1.3/samtools";
 $cutoff ||= 1;
