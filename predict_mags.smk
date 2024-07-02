@@ -26,7 +26,7 @@ rule predict_mags_gene_prodigal:
         {threads} \
         {input.binning_done} \
         {output.predict_done}
-        deactivate meta6_env
+        conda deactivate
         '''
 
 
