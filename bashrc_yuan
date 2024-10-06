@@ -9,5 +9,5 @@ fi
 # export SYSTEMD_PAGER=
 
 # User specific aliases and functions
-/data/work/TCR/mixcr-3.0.13/mixcr activate-license
-E-POXTSIARYXNJJLSPASCPKBEIYYDPQOFDHPPJSFWPYLAFLEAK
+export MI_LICENSE="E-POXTSIARYXNJJLSPASCPKBEIYYDPQOFDHPPJSFWPYLAFLEAK"
+export MI_LICENSE_FILE=/data/work/TCR/mixcr-3.0.13/
