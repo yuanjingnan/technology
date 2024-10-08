@@ -10,4 +10,4 @@ fi
 
 # User specific aliases and functions
 export MI_LICENSE="E-POXTSIARYXNJJLSPASCPKBEIYYDPQOFDHPPJSFWPYLAFLEAK"
-export MI_LICENSE_FILE=/mixcr-4.1.0/
+export MI_LICENSE_FILE=~/
